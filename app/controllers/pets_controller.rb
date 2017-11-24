@@ -11,7 +11,15 @@ class PetsController < ApplicationController
   end
 
   post '/pets' do
-    Pet.create(name: params[:owner][:pet][:name])
+    # binding.pry
+    @pet = Pet.create(name: params[:pet][:name])
+    if !params[:owner][:name].empty?
+      @pet.owner = Owner.create(name: params[:owner][:name])
+      @pet.save
+    else
+      @pet.owner = Owner.find(params[:pet][:owner_id])
+      @pet.save
+    end
     redirect to "pets/#{@pet.id}"
   end
 
@@ -20,12 +28,16 @@ class PetsController < ApplicationController
     erb :'/pets/show'
   end
 
+  get '/pets/:id/edit' do
+    @pet = Pet.find(params[:id])
+    @owners = Owner.all
+    erb :'/pets/edit'
+  end
+
   post '/pets/:id' do
-    @pet = Pet.find_or_create_by(name: params[:pet][:name])
-
-    binding.pry
-
-    if !params[:pet][:owner].empty? # if the form isn't empty
+    @pet = Pet.find(params[:id])
+    @pet.update(params[:pet])
+    if !params[:owner][:name].empty? # if the form isn't empty
       @pet.owner = Owner.create(name: params[:owner][:name]) # update the pet with what is put in the form
       @pet.save
     else # otherwise, use whichever radio button is selected
@@ -54,10 +66,6 @@ class PetsController < ApplicationController
     redirect to "pets/#{@pet.id}"
   end
 
-  get '/pets/:id/edit' do
-    @pet = Pet.find(params[:id])
-    @owners = Owner.all
-    erb :'/pets/edit'
-  end
+
 
 end
